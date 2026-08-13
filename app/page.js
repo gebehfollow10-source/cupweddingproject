@@ -32,6 +32,12 @@ export default function Home(){
  const day=days[dt.getDay()];
  const displayDate=`${day}, ${dt.getDate()} ${months[dt.getMonth()]} ${dt.getFullYear()}`;
  const initials=`${form.groom.split(" ")[0]} & ${form.bride.split(" ")[0]}`;
+ const normalizeUrl=(value)=>{
+  const raw=String(value||"").trim();
+  if(!raw)return "";
+  try{const u=new URL(/^https?:\/\//i.test(raw)?raw:`https://${raw}`);return /^https?:$/.test(u.protocol)?u.href:"";}catch{return ""}
+ };
+ const mapsUrl=normalizeUrl(form.maps);
 
  function readImageAsJpeg(file){
   return new Promise((resolve,reject)=>{
@@ -82,6 +88,13 @@ export default function Home(){
     if(!src)return false;
     try{doc.addImage(src,"JPEG",x,y,w,h,undefined,"FAST");return true}catch(e){return false}
    };
+   const addLinkButton=(label,url,x,y,w=58,h=10)=>{
+    if(!url)return false;
+    doc.setFillColor(r,g,b);doc.roundedRect(x,y,w,h,5,5,"F");
+    addText(label,x+w/2,y+6.7,8,"bold",[255,255,255],"center");
+    doc.link(x,y,w,h,{url});
+    return true;
+   };
    // Halaman 1: cover
    doc.setFillColor(250,244,240);doc.rect(0,0,W,H,"F");
    addText("THE WEDDING OF",W/2,35,9,"bold",[110,90,84],"center");
@@ -117,6 +130,12 @@ export default function Home(){
    const addrLines=doc.splitTextToSize(form.address||"",150);addText(addrLines,W/2,230,10,"normal",[95,82,78],"center");
    addText("COUNTDOWN",W/2,260,8,"bold",[110,90,84],"center");
    addText(String(left.d).padStart(2,"0")+" Hari   "+String(left.h).padStart(2,"0")+" Jam   "+String(left.m).padStart(2,"0")+" Menit",W/2,273,10,"bold",[r,g,b],"center");
+   const pdfLinks=[
+    [mapsUrl,"Lihat Lokasi"],
+    ].filter(x=>x[0]);
+   const linkW=50, linkGap=5, total=pdfLinks.length*linkW+(pdfLinks.length-1)*linkGap;
+   let linkX=(W-total)/2;
+   pdfLinks.forEach(([url,label])=>{addLinkButton(label,url,linkX,282,linkW,10);linkX+=linkW+linkGap;});
 
    // Halaman 3: semua foto 2-4, sehingga 4 foto selalu ikut PDF
    doc.addPage();
@@ -157,7 +176,7 @@ export default function Home(){
 <section class="cover"><small>THE WEDDING OF</small><h1>${safe(initials)}</h1>${photoHTML}<p>${safe(displayDate)}</p><p>${safe(form.venue)}</p></section>
 <section class="section"><p class="quote">“${safe(form.quote)}”</p><p>Dengan memohon rahmat dan ridho Tuhan Yang Maha Esa, kami bermaksud menyelenggarakan pernikahan putra-putri kami.</p><h2>${safe(form.groom)} &amp; ${safe(form.bride)}</h2><p>${safe(form.parentsG)}<br>&amp;<br>${safe(form.parentsB)}</p></section>
 <section class="count"><small>COUNTDOWN TO OUR WEDDING</small><div class="grid"><div><b id="d">00</b><span>Hari</span></div><div><b id="h">00</b><span>Jam</span></div><div><b id="m">00</b><span>Menit</span></div><div><b id="s">00</b><span>Detik</span></div></div></section>
-<section class="event"><small>SAVE THE DATE</small><h2>${safe(day.toUpperCase())}</h2><strong>${dt.getDate()}</strong><h3>${safe(months[dt.getMonth()].toUpperCase())} ${dt.getFullYear()}</h3><p>${safe(form.time)} WIB</p><hr><h2>${safe(form.venue)}</h2><p>${safe(form.address)}</p><a class="btn" href="${safe(form.maps)}" target="_blank" rel="noopener">Lihat Lokasi</a></section>
+<section class="event"><small>SAVE THE DATE</small><h2>${safe(day.toUpperCase())}</h2><strong>${dt.getDate()}</strong><h3>${safe(months[dt.getMonth()].toUpperCase())} ${dt.getFullYear()}</h3><p>${safe(form.time)} WIB</p><hr><h2>${safe(form.venue)}</h2><p>${safe(form.address)}</p><div class="share">${mapsUrl?`<a class="btn" href="${safe(mapsUrl)}" target="_blank" rel="noopener">Lihat Lokasi</a>`:""}</div></section>
 ${galleryHTML}<section class="section"><h2>Terima Kasih</h2><p>Merupakan suatu kebahagiaan bagi kami apabila Anda berkenan hadir dan memberikan doa restu.</p><p><b>${safe(initials)}</b></p></section>
 <div class="footer">CupzProject —Generate Wedding</div></main>
 <script>const target=new Date(${JSON.stringify(form.date+'T'+form.time+':00')});function tick(){let x=Math.max(0,target-new Date());document.getElementById('d').textContent=String(Math.floor(x/86400000)).padStart(2,'0');document.getElementById('h').textContent=String(Math.floor(x%86400000/3600000)).padStart(2,'0');document.getElementById('m').textContent=String(Math.floor(x%3600000/60000)).padStart(2,'0');document.getElementById('s').textContent=String(Math.floor(x%60000/1000)).padStart(2,'0')}tick();setInterval(tick,1000);</script>
@@ -183,7 +202,8 @@ ${galleryHTML}<section class="section"><h2>Terima Kasih</h2><p>Merupakan suatu k
     <div className="two"><label>Tanggal<input type="date" value={form.date} onChange={e=>set("date",e.target.value)}/></label><label>Jam<input type="time" value={form.time} onChange={e=>set("time",e.target.value)}/></label></div>
     <label>Lokasi<input value={form.venue} onChange={e=>set("venue",e.target.value)}/></label>
     <label>Alamat<textarea value={form.address} onChange={e=>set("address",e.target.value)}/></label>
-    <label>Google Maps<input value={form.maps} onChange={e=>set("maps",e.target.value)}/></label>
+    <label>Google Maps<input value={form.maps} onChange={e=>set("maps",e.target.value)} placeholder="https://maps.google.com/..."/></label>
+    <p className="note">Link Google Maps yang diisi akan menjadi <b>clickable</b> di PDF dan undangan HTML.</p>
     <label>Foto 1 — Foto Pengantin<input type="file" accept="image/*" onChange={e=>upload(0,e)}/></label>
     <label>Foto 2 — Foto Galeri Pengantin<input type="file" accept="image/*" onChange={e=>upload(1,e)}/></label>
     <label>Foto 3 — Foto Galeri Pengantin<input type="file" accept="image/*" onChange={e=>upload(2,e)}/></label>
@@ -200,7 +220,7 @@ ${galleryHTML}<section class="section"><h2>Terima Kasih</h2><p>Merupakan suatu k
       <div className="cover"><small>THE WEDDING OF</small><h2>{initials}</h2>{photos[0]?<img className="photo" src={photos[0]} alt="Foto pengantin"/>:<div className="photo placeholder">Foto Pengantin</div>}<p>{displayDate}</p><button className="ghost" onClick={()=>setOpen(true)}>Buka Undangan</button></div>
       <section className="section"><p className="quote">“{form.quote}”</p><p>Dengan memohon rahmat dan ridho Tuhan Yang Maha Esa, kami bermaksud menyelenggarakan pernikahan putra-putri kami.</p><h3>{form.groom} & {form.bride}</h3><p>{form.parentsG}<br/>&<br/>{form.parentsB}</p></section>
       <section className="count"><small>COUNTDOWN TO OUR WEDDING</small><div className="countgrid">{[[left.d,"Hari"],[left.h,"Jam"],[left.m,"Menit"],[left.s,"Detik"]].map(x=><div key={x[1]}><b>{String(x[0]).padStart(2,"0")}</b><span>{x[1]}</span></div>)}</div></section>
-      <section className="event"><small>SAVE THE DATE</small><h3>{day.toUpperCase()}</h3><strong>{dt.getDate()}</strong><h4>{months[dt.getMonth()].toUpperCase()} {dt.getFullYear()}</h4><p>{form.time} WIB</p><hr/><h3>{form.venue}</h3><p>{form.address}</p><a className="btn" href={form.maps} target="_blank">Lihat Lokasi</a></section>
+      <section className="event"><small>SAVE THE DATE</small><h3>{day.toUpperCase()}</h3><strong>{dt.getDate()}</strong><h4>{months[dt.getMonth()].toUpperCase()} {dt.getFullYear()}</h4><p>{form.time} WIB</p><hr/><h3>{form.venue}</h3><p>{form.address}</p><div className="shareRow">{mapsUrl&&<a className="btn" href={mapsUrl} target="_blank" rel="noreferrer">Lihat Lokasi</a>}</div></section>
       {photos.slice(1).some(Boolean)&&<section className="gallery"><h3>Galeri Foto</h3><div className="galleryGrid">{photos.slice(1).map((src,i)=>src&&<img key={i} src={src} alt={`Foto ${i+2}`}/>)}</div></section>}
       <section className="section"><h3>Terima Kasih</h3><p>Merupakan suatu kebahagiaan bagi kami apabila Anda berkenan hadir dan memberikan doa restu.</p><div className="shareRow"><button className="btn light" onClick={share}>{copied?"Tersalin!":"Bagikan"}</button><button className="btn dark" onClick={exportPDF}>Export PDF</button><button className="btn outline" onClick={downloadHTML}>Download HTML</button></div><div className="signature">{initials}</div></section>
       <footer>CupzProject —Generate Wedding</footer>
