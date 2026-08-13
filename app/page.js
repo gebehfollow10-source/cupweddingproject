@@ -127,10 +127,10 @@ ${galleryHTML}<section class="section"><h2>Terima Kasih</h2><p>Merupakan suatu k
     <label>Lokasi<input value={form.venue} onChange={e=>set("venue",e.target.value)}/></label>
     <label>Alamat<textarea value={form.address} onChange={e=>set("address",e.target.value)}/></label>
     <label>Google Maps<input value={form.maps} onChange={e=>set("maps",e.target.value)}/></label>
-    <label>Foto 1 — Foto Utama<input type="file" accept="image/*" onChange={e=>upload(0,e)}/></label>
-    <label>Foto 2<input type="file" accept="image/*" onChange={e=>upload(1,e)}/></label>
-    <label>Foto 3<input type="file" accept="image/*" onChange={e=>upload(2,e)}/></label>
-    <label>Foto 4<input type="file" accept="image/*" onChange={e=>upload(3,e)}/></label>
+    <label>Foto 1 — Foto Pengantin<input type="file" accept="image/*" onChange={e=>upload(0,e)}/></label>
+    <label>Foto 2 — Foto Galeri Pengantin<input type="file" accept="image/*" onChange={e=>upload(1,e)}/></label>
+    <label>Foto 3 — Foto Galeri Pengantin<input type="file" accept="image/*" onChange={e=>upload(2,e)}/></label>
+    <label>Foto 4 — Foto Galeri Pengantin<input type="file" accept="image/*" onChange={e=>upload(3,e)}/></label>
     <p className="note">Gunakan 1–4 foto. Foto 1 menjadi cover, foto 2–4 otomatis masuk ke galeri dan ikut saat Download HTML / Export PDF.</p>
     <div className="two"><label>Orang Tua Pria<input value={form.parentsG} onChange={e=>set("parentsG",e.target.value)}/></label><label>Orang Tua Wanita<input value={form.parentsB} onChange={e=>set("parentsB",e.target.value)}/></label></div>
     <label>Quote / Kata-kata<textarea value={form.quote} onChange={e=>set("quote",e.target.value)}/></label>
