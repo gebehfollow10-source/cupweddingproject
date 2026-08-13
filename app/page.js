@@ -43,7 +43,7 @@ export default function Home(){
       <section className="count"><small>COUNTDOWN TO OUR WEDDING</small><div className="countgrid">{[[left.d,"Hari"],[left.h,"Jam"],[left.m,"Menit"],[left.s,"Detik"]].map(x=><div key={x[1]}><b>{String(x[0]).padStart(2,"0")}</b><span>{x[1]}</span></div>)}</div></section>
       <section className="event"><small>SAVE THE DATE</small><h3>{day.toUpperCase()}</h3><strong>{dt.getDate()}</strong><h4>{months[dt.getMonth()].toUpperCase()} {dt.getFullYear()}</h4><p>{time} WIB</p><hr/><h3>{venue}</h3><p>{address}</p><a className="btn" href={maps} target="_blank">Lihat Lokasi</a></section>
       <section className="section"><h3>RSVP</h3><p>Konfirmasi kehadiran</p><input className="rsvp" placeholder="Nama Anda" value={rsvp} onChange={e=>setRsvp(e.target.value)}/><button className="btn" onClick={wa}>Konfirmasi via WhatsApp</button><h3>Terima Kasih</h3><b>{initials}</b></section>
-      <footer>Undangan demo/fiktif — CupzWedding</footer>
+      <footer>Undangan — CupzWedding</footer>
     </article>
    </section>
   </div>
