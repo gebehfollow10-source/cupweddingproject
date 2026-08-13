@@ -1,5 +1,6 @@
  "use client";
 import {useEffect,useMemo,useState} from "react";
+import {jsPDF} from "jspdf";
 
 const months=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
 const days=["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
@@ -32,15 +33,36 @@ export default function Home(){
  const displayDate=`${day}, ${dt.getDate()} ${months[dt.getMonth()]} ${dt.getFullYear()}`;
  const initials=`${form.groom.split(" ")[0]} & ${form.bride.split(" ")[0]}`;
 
+ function readImageAsJpeg(file){
+  return new Promise((resolve,reject)=>{
+   const reader=new FileReader();
+   reader.onerror=reject;
+   reader.onload=()=>{
+    const img=new Image();
+    img.onload=()=>{
+     const max=1600;
+     const scale=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));
+     const canvas=document.createElement("canvas");
+     canvas.width=Math.max(1,Math.round(img.naturalWidth*scale));
+     canvas.height=Math.max(1,Math.round(img.naturalHeight*scale));
+     const ctx=canvas.getContext("2d");
+     ctx.fillStyle="#ffffff";ctx.fillRect(0,0,canvas.width,canvas.height);
+     ctx.drawImage(img,0,0,canvas.width,canvas.height);
+     resolve(canvas.toDataURL("image/jpeg",0.88));
+    };
+    img.onerror=reject;
+    img.src=reader.result;
+   };
+   reader.readAsDataURL(file);
+  });
+ }
  function upload(index,e){
   const f=e.target.files?.[0]; if(!f)return;
-  const r=new FileReader();
-  r.onload=()=>setPhotos(prev=>{const next=[...prev];next[index]=r.result;return next});
-  r.readAsDataURL(f);
+  readImageAsJpeg(f).then(data=>setPhotos(prev=>{const next=[...prev];next[index]=data;return next})).catch(()=>alert("Foto gagal dibaca. Silakan pilih foto JPG/PNG lain."));
  }
  function uploadMultiple(e){
   const files=Array.from(e.target.files||[]).slice(0,4);
-  files.forEach((f,index)=>{const r=new FileReader();r.onload=()=>setPhotos(prev=>{const next=[...prev];next[index]=r.result;return next});r.readAsDataURL(f)});
+  files.forEach((f,index)=>readImageAsJpeg(f).then(data=>setPhotos(prev=>{const next=[...prev];next[index]=data;return next})).catch(()=>{}));
  }
  function reset(){setForm({groom:"Rizky Pratama",bride:"Alya Maharani",date:"2026-12-20",time:"10:00",venue:"Gedung Graha Cinta",address:"Jl. Melati No. 123, Yogyakarta",maps:"https://maps.google.com",parentsG:"Bapak & Ibu Keluarga Pratama",parentsB:"Bapak & Ibu Keluarga Maharani",quote:"Dengan penuh kebahagiaan, kami mengundang Anda untuk menjadi bagian dari hari istimewa kami.",theme:"classic",color:"#8b5e5e"});setPhotos(["","","",""]);setGenerated(false)}
  async function share(){
@@ -50,35 +72,70 @@ export default function Home(){
  }
 
  function exportPDF(){
-  // Open a dedicated print document so mobile Chrome/Android prints all images reliably.
-  const popup=window.open("", "_blank");
-  if(!popup){
-    alert("Izinkan pop-up browser untuk Export PDF.");
-    return;
+  try{
+   const doc=new jsPDF({orientation:"portrait",unit:"mm",format:"a4",compress:true});
+   const W=210,H=297,margin=16,accent=form.color||"#8b5e5e";
+   const rgb=(hex)=>{const h=hex.replace("#","");return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]};
+   const [r,g,b]=rgb(accent);
+   const addText=(txt,x,y,size=12,style="normal",color=[60,45,45],align="left")=>{doc.setFont("helvetica",style);doc.setFontSize(size);doc.setTextColor(...color);doc.text(String(txt||""),x,y,{align});};
+   const addImageFit=(src,x,y,w,h)=>{
+    if(!src)return false;
+    try{doc.addImage(src,"JPEG",x,y,w,h,undefined,"FAST");return true}catch(e){return false}
+   };
+   // Halaman 1: cover
+   doc.setFillColor(250,244,240);doc.rect(0,0,W,H,"F");
+   addText("THE WEDDING OF",W/2,35,9,"bold",[110,90,84],"center");
+   addText(initials,W/2,52,30,"bold",[r,g,b],"center");
+   if(photos[0]){
+    doc.setFillColor(255,255,255);doc.roundedRect(57,65,96,112,10,10,"F");
+    addImageFit(photos[0],61,69,88,104);
+   }else{
+    doc.setFillColor(232,224,220);doc.roundedRect(57,65,96,112,10,10,"F");addText("Foto Pengantin",W/2,123,12,"normal",[120,105,100],"center");
+   }
+   addText(displayDate,W/2,195,14,"normal",[65,50,48],"center");
+   addText(form.venue,W/2,205,12,"bold",[r,g,b],"center");
+   addText(form.address,W/2,214,9,"normal",[100,88,84],"center");
+   addText("Dengan penuh kebahagiaan, kami mengundang Anda untuk menjadi bagian dari hari istimewa kami.",W/2,238,10,"italic",[105,88,82],"center");
+   addText(initials,W/2,270,16,"italic",[r,g,b],"center");
+
+   // Halaman 2: detail acara
+   doc.addPage();
+   doc.setFillColor(255,253,251);doc.rect(0,0,W,H,"F");
+   addText("UNDANGAN PERNIKAHAN",W/2,28,9,"bold",[110,90,84],"center");
+   addText(form.groom+" & "+form.bride,W/2,43,20,"bold",[r,g,b],"center");
+   addText("Dengan memohon rahmat dan ridho Tuhan Yang Maha Esa, kami bermaksud menyelenggarakan pernikahan putra-putri kami.",W/2,61,10,"normal",[90,78,73],"center");
+   addText(form.parentsG,W/2,75,10,"normal",[75,63,60],"center");
+   addText("&",W/2,82,10,"normal",[r,g,b],"center");
+   addText(form.parentsB,W/2,89,10,"normal",[75,63,60],"center");
+   doc.setFillColor(246,237,232);doc.roundedRect(20,105,170,78,8,8,"F");
+   addText("SAVE THE DATE",W/2,120,9,"bold",[110,90,84],"center");
+   addText(day.toUpperCase(),W/2,136,12,"bold",[r,g,b],"center");
+   addText(String(dt.getDate()),W/2,157,30,"bold",[r,g,b],"center");
+   addText(months[dt.getMonth()].toUpperCase()+" "+dt.getFullYear(),W/2,169,11,"bold",[75,60,56],"center");
+   addText(form.time+" WIB",W/2,191,11,"bold",[75,60,56],"center");
+   addText(form.venue,W/2,217,15,"bold",[r,g,b],"center");
+   const addrLines=doc.splitTextToSize(form.address||"",150);addText(addrLines,W/2,230,10,"normal",[95,82,78],"center");
+   addText("COUNTDOWN",W/2,260,8,"bold",[110,90,84],"center");
+   addText(String(left.d).padStart(2,"0")+" Hari   "+String(left.h).padStart(2,"0")+" Jam   "+String(left.m).padStart(2,"0")+" Menit",W/2,273,10,"bold",[r,g,b],"center");
+
+   // Halaman 3: semua foto 2-4, sehingga 4 foto selalu ikut PDF
+   doc.addPage();
+   doc.setFillColor(255,253,251);doc.rect(0,0,W,H,"F");
+   addText("GALERI FOTO",W/2,27,20,"bold",[r,g,b],"center");
+   addText("Kenangan indah dalam satu hari istimewa",W/2,36,9,"italic",[105,90,85],"center");
+   const gallery=photos.map((src,i)=>({src,i})).filter(x=>x.src);
+   const slots=[[18,50,82,78],[110,50,82,78],[18,140,82,78],[110,140,82,78]];
+   gallery.slice(0,4).forEach((item,n)=>{const [x,y,w,h]=slots[n];doc.setFillColor(245,239,235);doc.roundedRect(x,y,w,h,5,5,"F");addImageFit(item.src,x+2,y+2,w-4,h-4);addText("Foto "+(item.i+1),x+w/2,y+h+8,8,"normal",[110,95,90],"center")});
+   addText("Terima Kasih",W/2,250,18,"bold",[r,g,b],"center");
+   const thanks=doc.splitTextToSize("Merupakan suatu kebahagiaan bagi kami apabila Anda berkenan hadir dan memberikan doa restu.",150);addText(thanks,W/2,264,10,"normal",[95,82,78],"center");
+   addText(initials,W/2,285,15,"italic",[r,g,b],"center");
+
+   const filename=`undangan-${form.groom.replace(/\s+/g,"-").toLowerCase()}-${form.bride.replace(/\s+/g,"-").toLowerCase()}.pdf`;
+   doc.save(filename);
+  }catch(err){
+   console.error(err);
+   alert("PDF gagal dibuat. Pastikan semua foto sudah selesai dipilih, lalu coba lagi.");
   }
-  const safe=(value)=>String(value ?? "").replace(/[&<>\"']/g,(ch)=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch]));
-  const allPhotos=photos.filter(Boolean);
-  const coverPhoto=allPhotos[0]||"";
-  const galleryPhotos=allPhotos.slice(1);
-  const galleryHTML=galleryPhotos.map((src,i)=>`<figure><img src="${src}" alt="Foto ${i+2}"><figcaption>Foto ${i+2}</figcaption></figure>`).join("");
-  const coverHTML=coverPhoto?`<img class="coverPhoto" src="${coverPhoto}" alt="Foto pengantin">`:`<div class="coverPhoto placeholder">Foto Pengantin</div>`;
-  const html=`<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Undangan ${safe(initials)}</title>
-<style>
-@page{size:A4 portrait;margin:10mm}
-*{box-sizing:border-box}html,body{margin:0;padding:0;background:#fff;color:#382d2d;font-family:Georgia,serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}.page{width:100%;max-width:190mm;margin:0 auto}.cover{text-align:center;min-height:270mm;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18mm 12mm;break-after:page;page-break-after:always;background:linear-gradient(135deg,#fff,#f7eeee)}small{letter-spacing:3px}.cover h1{font-size:42pt;margin:8mm 0 4mm;color:${safe(form.color)}}.cover p{margin:3mm 0;font-size:13pt}.coverPhoto{width:72mm;height:88mm;object-fit:cover;border-radius:40mm 40mm 8mm 8mm;border:3px solid #fff;box-shadow:0 5mm 12mm rgba(0,0,0,.15);margin:5mm 0 7mm}.placeholder{display:flex;align-items:center;justify-content:center;background:#eee;color:#888;font-family:Arial,sans-serif}.section{text-align:center;padding:18mm 12mm;break-inside:avoid}.section p{line-height:1.8;color:#665}.quote{font-style:italic;font-size:14pt}.count{text-align:center;padding:15mm 10mm;background:#faf6f4;break-inside:avoid}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5mm;margin-top:8mm}.grid div{padding:7mm 2mm;background:#fff;border-radius:4mm}.grid b{display:block;font-size:22pt;color:${safe(form.color)}}.grid span{font-size:9pt;color:#777}.event{text-align:center;padding:18mm 10mm;break-inside:avoid}.event strong{display:block;font-size:58pt;color:${safe(form.color)};margin:5mm}.event hr{border:0;border-top:1px solid #ddd;margin:10mm 0}.btn{display:inline-block;background:${safe(form.color)};color:#fff;padding:4mm 8mm;border-radius:99px;text-decoration:none}.gallery{padding:15mm 6mm;break-before:page;page-break-before:always}.gallery h2{text-align:center;margin:0 0 8mm}.galleryGrid{display:grid;grid-template-columns:1fr 1fr;gap:7mm}.galleryGrid figure{margin:0;break-inside:avoid;page-break-inside:avoid}.galleryGrid img{display:block;width:100%;height:72mm;object-fit:cover;border-radius:5mm}.galleryGrid figcaption{text-align:center;font:9pt Arial,sans-serif;color:#777;margin-top:2mm}.thanks{text-align:center;padding:18mm 12mm;break-inside:avoid}.footer{text-align:center;font:8pt Arial,sans-serif;color:#888;padding:8mm}
-</style></head><body><main class="page">
-<section class="cover"><small>THE WEDDING OF</small><h1>${safe(initials)}</h1>${coverHTML}<p>${safe(displayDate)}</p><p>${safe(form.venue)}</p></section>
-<section class="section"><p class="quote">“${safe(form.quote)}”</p><p>Dengan memohon rahmat dan ridho Tuhan Yang Maha Esa, kami bermaksud menyelenggarakan pernikahan putra-putri kami.</p><h2>${safe(form.groom)} &amp; ${safe(form.bride)}</h2><p>${safe(form.parentsG)}<br>&amp;<br>${safe(form.parentsB)}</p></section>
-<section class="count"><small>COUNTDOWN TO OUR WEDDING</small><div class="grid"><div><b>${String(left.d).padStart(2,'0')}</b><span>Hari</span></div><div><b>${String(left.h).padStart(2,'0')}</b><span>Jam</span></div><div><b>${String(left.m).padStart(2,'0')}</b><span>Menit</span></div><div><b>${String(left.s).padStart(2,'0')}</b><span>Detik</span></div></div></section>
-<section class="event"><small>SAVE THE DATE</small><h2>${safe(day.toUpperCase())}</h2><strong>${dt.getDate()}</strong><h3>${safe(months[dt.getMonth()].toUpperCase())} ${dt.getFullYear()}</h3><p>${safe(form.time)} WIB</p><hr><h2>${safe(form.venue)}</h2><p>${safe(form.address)}</p></section>
-${galleryHTML?`<section class="gallery"><h2>Galeri Foto</h2><div class="galleryGrid">${galleryHTML}</div></section>`:""}
-<section class="thanks"><h2>Terima Kasih</h2><p>Merupakan suatu kebahagiaan bagi kami apabila Anda berkenan hadir dan memberikan doa restu.</p><p><b>${safe(initials)}</b></p></section><div class="footer">CupzProject —Generate Wedding</div>
-</main><script>
-(async()=>{const imgs=[...document.images];await Promise.all(imgs.map(img=>img.complete?Promise.resolve():new Promise(r=>{img.onload=r;img.onerror=r})));if(document.fonts&&document.fonts.ready)await document.fonts.ready;setTimeout(()=>{window.focus();window.print();setTimeout(()=>window.close(),1200)},500)})();
-</script></body></html>`;
-  popup.document.open();
-  popup.document.write(html);
-  popup.document.close();
  }
 
  function downloadHTML(){
