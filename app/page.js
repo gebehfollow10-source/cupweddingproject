@@ -72,7 +72,7 @@ export default function Home(){
 <section class="count"><small>COUNTDOWN TO OUR WEDDING</small><div class="grid"><div><b>${String(left.d).padStart(2,'0')}</b><span>Hari</span></div><div><b>${String(left.h).padStart(2,'0')}</b><span>Jam</span></div><div><b>${String(left.m).padStart(2,'0')}</b><span>Menit</span></div><div><b>${String(left.s).padStart(2,'0')}</b><span>Detik</span></div></div></section>
 <section class="event"><small>SAVE THE DATE</small><h2>${safe(day.toUpperCase())}</h2><strong>${dt.getDate()}</strong><h3>${safe(months[dt.getMonth()].toUpperCase())} ${dt.getFullYear()}</h3><p>${safe(form.time)} WIB</p><hr><h2>${safe(form.venue)}</h2><p>${safe(form.address)}</p></section>
 ${galleryHTML?`<section class="gallery"><h2>Galeri Foto</h2><div class="galleryGrid">${galleryHTML}</div></section>`:""}
-<section class="thanks"><h2>Terima Kasih</h2><p>Merupakan suatu kebahagiaan bagi kami apabila Anda berkenan hadir dan memberikan doa restu.</p><p><b>${safe(initials)}</b></p></section><div class="footer">Undangan demo/fiktif — CupzWedding</div>
+<section class="thanks"><h2>Terima Kasih</h2><p>Merupakan suatu kebahagiaan bagi kami apabila Anda berkenan hadir dan memberikan doa restu.</p><p><b>${safe(initials)}</b></p></section><div class="footer">CupzProject —Generate Wedding</div>
 </main><script>
 (async()=>{const imgs=[...document.images];await Promise.all(imgs.map(img=>img.complete?Promise.resolve():new Promise(r=>{img.onload=r;img.onerror=r})));if(document.fonts&&document.fonts.ready)await document.fonts.ready;setTimeout(()=>{window.focus();window.print();setTimeout(()=>window.close(),1200)},500)})();
 </script></body></html>`;
@@ -102,7 +102,7 @@ ${galleryHTML?`<section class="gallery"><h2>Galeri Foto</h2><div class="galleryG
 <section class="count"><small>COUNTDOWN TO OUR WEDDING</small><div class="grid"><div><b id="d">00</b><span>Hari</span></div><div><b id="h">00</b><span>Jam</span></div><div><b id="m">00</b><span>Menit</span></div><div><b id="s">00</b><span>Detik</span></div></div></section>
 <section class="event"><small>SAVE THE DATE</small><h2>${safe(day.toUpperCase())}</h2><strong>${dt.getDate()}</strong><h3>${safe(months[dt.getMonth()].toUpperCase())} ${dt.getFullYear()}</h3><p>${safe(form.time)} WIB</p><hr><h2>${safe(form.venue)}</h2><p>${safe(form.address)}</p><a class="btn" href="${safe(form.maps)}" target="_blank" rel="noopener">Lihat Lokasi</a></section>
 ${galleryHTML}<section class="section"><h2>Terima Kasih</h2><p>Merupakan suatu kebahagiaan bagi kami apabila Anda berkenan hadir dan memberikan doa restu.</p><p><b>${safe(initials)}</b></p></section>
-<div class="footer">Undangan demo/fiktif — CupzWedding</div></main>
+<div class="footer">CupzProject —Generate Wedding</div></main>
 <script>const target=new Date(${JSON.stringify(form.date+'T'+form.time+':00')});function tick(){let x=Math.max(0,target-new Date());document.getElementById('d').textContent=String(Math.floor(x/86400000)).padStart(2,'0');document.getElementById('h').textContent=String(Math.floor(x%86400000/3600000)).padStart(2,'0');document.getElementById('m').textContent=String(Math.floor(x%3600000/60000)).padStart(2,'0');document.getElementById('s').textContent=String(Math.floor(x%60000/1000)).padStart(2,'0')}tick();setInterval(tick,1000);</script>
 </body></html>`;
   const blob=new Blob([html],{type:"text/html;charset=utf-8"});
@@ -136,7 +136,6 @@ ${galleryHTML}<section class="section"><h2>Terima Kasih</h2><p>Merupakan suatu k
     <label>Quote / Kata-kata<textarea value={form.quote} onChange={e=>set("quote",e.target.value)}/></label>
     <div className="two"><label>Warna<input type="color" value={form.color} onChange={e=>set("color",e.target.value)}/></label><label>Tema<select value={form.theme} onChange={e=>set("theme",e.target.value)}><option value="classic">Classic</option><option value="modern">Modern</option><option value="floral">Floral</option></select></label></div>
     <div className="row"><button className="btn" onClick={()=>setGenerated(true)}>✨ Generate Undangan</button><button className="reset" onClick={reset}>Reset</button></div>
-    <p className="note">Versi ini tidak memakai database. Foto dan data diproses di browser. Cocok untuk generator demo.</p>
    </aside>
    <section className="preview">
     <div className="previewbar"><b>{generated?"Hasil Undangan":"Preview"}</b><span>{displayDate}</span></div>
