@@ -146,7 +146,7 @@ ${galleryHTML}<section class="section"><h2>Terima Kasih</h2><p>Merupakan suatu k
       <section className="event"><small>SAVE THE DATE</small><h3>{day.toUpperCase()}</h3><strong>{dt.getDate()}</strong><h4>{months[dt.getMonth()].toUpperCase()} {dt.getFullYear()}</h4><p>{form.time} WIB</p><hr/><h3>{form.venue}</h3><p>{form.address}</p><a className="btn" href={form.maps} target="_blank">Lihat Lokasi</a></section>
       {photos.slice(1).some(Boolean)&&<section className="gallery"><h3>Galeri Foto</h3><div className="galleryGrid">{photos.slice(1).map((src,i)=>src&&<img key={i} src={src} alt={`Foto ${i+2}`}/>)}</div></section>}
       <section className="section"><h3>Terima Kasih</h3><p>Merupakan suatu kebahagiaan bagi kami apabila Anda berkenan hadir dan memberikan doa restu.</p><div className="shareRow"><button className="btn light" onClick={share}>{copied?"Tersalin!":"Bagikan"}</button><button className="btn dark" onClick={exportPDF}>Export PDF</button><button className="btn outline" onClick={downloadHTML}>Download HTML</button></div><div className="signature">{initials}</div></section>
-      <footer>Undangan demo/fiktif — CupzWedding</footer>
+      <footer>CupzProject —Generate Wedding</footer>
     </article>
    </section>
   </div>
