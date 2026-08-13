@@ -24,7 +24,7 @@ export default function Home(){
  function upload(e){const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>setPhoto(r.result);r.readAsDataURL(f)}
  function wa(){if(!rsvp)return;window.open(`https://wa.me/?text=${encodeURIComponent(`Halo, saya ${rsvp} akan hadir di pernikahan ${initials}.`)}`,"_blank")}
  return <main style={{"--accent":color}}>
-  <header className="top"><div><span className="badge">DEMO / FIKTIF</span><h1>CupzWedding</h1><p>Generator undangan pernikahan digital — siap GitHub + Vercel.</p></div><button className="btn" onClick={()=>setOpen(true)}>Buka Undangan</button></header>
+  <header className="top"><div><span className="badge"></span><h1>CupzWedding</h1><p>Generator undangan pernikahan digital </p></div><button className="btn" onClick={()=>setOpen(true)}>Buka Undangan</button></header>
   <div className="layout">
    <aside className="editor">
     <h2>Pengaturan</h2>
