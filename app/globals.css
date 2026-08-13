@@ -92,3 +92,9 @@ button{touch-action:manipulation}
  .modal{display:none!important}
  .btn,.ghost{display:none!important}
 }
+.gallery{padding:58px 28px;background:#fffdfb}
+.gallery h3{font-family:'Playfair Display',Georgia,serif;font-size:29px;color:#624741;margin:0 0 22px}
+.galleryGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;max-width:650px;margin:auto}
+.galleryGrid img{width:100%;height:270px;object-fit:cover;border-radius:20px;border:5px solid #fff;box-shadow:0 14px 35px #4b302718}
+.modern .gallery{background:#171313}.modern .gallery h3{color:#fff}
+@media(max-width:520px){.gallery{padding:45px 18px}.galleryGrid{gap:9px}.galleryGrid img{height:190px;border-radius:14px}}
